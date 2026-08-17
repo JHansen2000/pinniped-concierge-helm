@@ -74,13 +74,5 @@ Every value above has a safe, unchanged-behavior default except `certificate.*` 
 `jwtAuthenticators[0].*`, which are unset and validated with Helm's `required` function - the
 chart will refuse to render until you supply them
 
-### Migrating from chart 0.1.x
-
-`values.yaml` was restructured in `0.2.0` for configurability. Notable renames:
-
-- `supervisor.*` -> `jwtAuthenticators[0].*` (now a list; `supervisor.issuer` -> `jwtAuthenticators[0].issuer`, etc.)
-- `certificate.*` field names are unchanged, but the resource is now gated by `certificate.enabled` (default `true`, so existing values files keep working unmodified).
-- The chart previously pinned `ghcr.io/vmware/pinniped/pinniped-server:v0.45.0` regardless of `Chart.yaml`'s `appVersion` (which had already been bumped to `0.47.0`). The image now always tracks `appVersion` unless you set `image.tag`/`image.digest`.
-
 ## RBAC
 Kubernetes RBAC policies are *not* controlled by these charts. Recommended to use RBAC Manager to configure these.
