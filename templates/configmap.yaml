@@ -1,0 +1,30 @@
+{{- $fullname := include "pinniped-concierge.fullname" . -}}
+{{- $config := deepCopy .Values.config -}}
+{{- $_ := set $config.kubeCertAgent "image" ($config.kubeCertAgent.image | default (include "pinniped-concierge.image" .)) -}}
+{{- $names := dict
+      "servingCertificateSecret" (printf "%s-api-tls-serving-certificate" $fullname)
+      "credentialIssuer" (printf "%s-config" $fullname)
+      "apiService" (printf "%s-api" $fullname)
+      "impersonationLoadBalancerService" (printf "%s-impersonation-proxy-load-balancer" $fullname)
+      "impersonationClusterIPService" (printf "%s-impersonation-proxy-cluster-ip" $fullname)
+      "impersonationTLSCertificateSecret" (printf "%s-impersonation-proxy-tls-serving-certificate" $fullname)
+      "impersonationCACertificateSecret" (printf "%s-impersonation-proxy-ca-certificate" $fullname)
+      "impersonationSignerSecret" (printf "%s-impersonation-proxy-signer-ca-certificate" $fullname)
+      "agentServiceAccount" (include "pinniped-concierge.serviceAccountName.kubeCertAgent" .)
+      "impersonationProxyServiceAccount" (include "pinniped-concierge.serviceAccountName.impersonationProxy" .)
+      "impersonationProxyLegacySecret" (printf "%s-impersonation-proxy" $fullname)
+-}}
+{{- $_ := set $config "names" $names -}}
+{{- $_ := set $config "labels" (dict "app" "pinniped-concierge") -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $fullname }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+data:
+  # aggregatedAPIServerPort and impersonationProxyServerPort may be set via .Values.config,
+  # although other values referencing their defaults (10250, 8444) also need updating
+  pinniped.yaml: |
+    {{- toYaml $config | nindent 4 }}

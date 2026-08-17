@@ -1,0 +1,178 @@
+# Default values for pinniped-concierge
+# Declare variables to be passed into your templates
+# See values.schema.json for validation rules and README.md for full documentation
+
+# Override the chart name used in the "app.kubernetes.io/name" label
+nameOverride: ""
+# Override the computed release name used for resource names
+# Defaults to "pinniped-concierge"
+fullnameOverride: ""
+
+image:
+  repository: ghcr.io/vmware/pinniped/pinniped-server
+  # Defaults to "v<appVersion>" from Chart.yaml when empty
+  tag: ""
+  # Pinned to the digest published in Pinniped's official install manifests for the
+  # appVersion above. Override (or set to "") if you bump image.tag independently
+  digest: "sha256:3a46e1ea8b874281698dd27e60d6f9b46738cb10483baa9dc78a0023cc17e29d"
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+replicaCount: 2
+
+serviceAccount:
+  concierge:
+    create: true
+    name: ""
+    annotations: {}
+  kubeCertAgent:
+    create: true
+    name: ""
+  impersonationProxy:
+    create: true
+    name: ""
+    annotations: {}
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsUser: 65532
+  runAsGroup: 65532
+
+securityContext:
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations:
+  - key: CriticalAddonsOnly
+    operator: Exists
+  - key: node-role.kubernetes.io/master
+    effect: NoSchedule
+  - key: node-role.kubernetes.io/control-plane
+    effect: NoSchedule
+  - key: kubernetes.io/arch
+    effect: NoSchedule
+    operator: Equal
+    value: amd64
+  - key: kubernetes.io/arch
+    effect: NoSchedule
+    operator: Equal
+    value: arm64
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 50
+        podAffinityTerm:
+          labelSelector:
+            matchLabels:
+              deployment.pinniped.dev: concierge
+          topologyKey: kubernetes.io/hostname
+
+priorityClassName: ""
+
+extraEnv: []
+extraVolumes: []
+extraVolumeMounts: []
+
+service:
+  api:
+    type: ClusterIP
+    annotations: {}
+  proxy:
+    type: ClusterIP
+    annotations: {}
+
+apiService:
+  groupPriorityMinimum: 9900
+  versionPriority: 15
+
+# Rendered into the pinniped-concierge-config ConfigMap's pinniped.yaml
+# https://github.com/vmware/pinniped/blob/main/deploy/concierge/deployment.yaml
+config:
+  discovery:
+    url: null
+  api:
+    servingCertificate:
+      durationSeconds: 2592000
+      renewBeforeSeconds: 2160000
+  apiGroupSuffix: pinniped.dev
+  aggregatedAPIServerDisableAdmissionPlugins: []
+  kubeCertAgent:
+    namePrefix: pinniped-concierge-kube-cert-agent-
+    priorityClassName: null
+    image: ""
+  tls:
+    onedottwo:
+      allowedCiphers: []
+  audit:
+    logUsernamesAndGroups: disabled
+
+credentialIssuer:
+  create: true
+  impersonationProxy:
+    mode: auto
+    service:
+      type: LoadBalancer
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "4000"
+
+# cert-manager Certificate providing the TLS CA bundle
+certificate:
+  enabled: true
+  hostname: ""
+  clusterIssuer: ""
+  secretName: ""
+  duration: 17280h # 2y
+  renewBefore: 360h # 15d
+
+# https://pinniped.dev/docs/reference/crds/#jwtauthenticator
+jwtAuthenticators:
+  - name: supervisor-jwt-authenticator
+    issuer: ""
+    # openssl rand -base64 32
+    audience: ""
+    claims:
+      username: ""
+      groups: ""
+      # advanced: CEL expressions, mutually exclusive with username/groups above
+      usernameExpression: ""
+      groupsExpression: ""
+      # advanced: additional CEL-derived attributes; see the CRD reference below
+      extra: []
+    tls:
+      certificateAuthorityDataSource:
+        kind: Secret
+        name: ""
+        key: ca.crt
+    # advanced: CEL rules applied to token claims before authentication; see
+    # https://pinniped.dev/docs/reference/crds/#jwtauthenticator
+    claimValidationRules: []
+    # advanced: CEL rules applied to the final user identity after authentication
+    userValidationRules: []
+
+# https://pinniped.dev/docs/reference/crds/#webhookauthenticator
+webhookAuthenticators: []
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+extraManifests: []

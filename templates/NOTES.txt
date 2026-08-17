@@ -1,0 +1,17 @@
+Pinniped Concierge has been installed into namespace "{{ .Release.Namespace }}".
+
+Chart version: {{ .Chart.Version }}
+App version:   {{ .Chart.AppVersion }}
+Image:         {{ include "pinniped-concierge.image" . }}
+
+{{- if .Values.credentialIssuer.create }}
+Check rollout status with:
+  kubectl get credentialissuer {{ include "pinniped-concierge.fullname" . }}-config -o yaml
+{{- end }}
+
+{{- if not .Values.certificate.enabled }}
+
+NOTE: certificate.enabled is false. Make sure the Secret(s) referenced by your
+jwtAuthenticators[].tls.certificateAuthorityDataSource entries exist before the
+JWTAuthenticator(s) can be used.
+{{- end }}

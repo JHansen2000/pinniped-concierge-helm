@@ -1,0 +1,39 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "pinniped-concierge.fullname" . }}-pre-authn-apis
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - login.concierge.pinniped.dev
+    resources:
+      - tokencredentialrequests
+    verbs:
+      - create
+      - list
+  - apiGroups:
+      - identity.concierge.pinniped.dev
+    resources:
+      - whoamirequests
+    verbs:
+      - create
+      - list
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "pinniped-concierge.fullname" . }}-pre-authn-apis
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+subjects:
+  - kind: Group
+    name: system:authenticated
+    apiGroup: rbac.authorization.k8s.io
+  - kind: Group
+    name: system:unauthenticated
+    apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: {{ include "pinniped-concierge.fullname" . }}-pre-authn-apis
+  apiGroup: rbac.authorization.k8s.io

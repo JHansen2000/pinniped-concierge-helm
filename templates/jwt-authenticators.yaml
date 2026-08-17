@@ -1,0 +1,46 @@
+{{- range .Values.jwtAuthenticators }}
+{{- if not .name }}
+{{- fail "each jwtAuthenticators[] entry requires a name" }}
+{{- end }}
+apiVersion: authentication.concierge.pinniped.dev/v1alpha1
+kind: JWTAuthenticator
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- include "pinniped-concierge.labels" $ | nindent 4 }}
+spec:
+  issuer: {{ required (printf "jwtAuthenticators[%s].issuer is required" .name) .issuer | quote }}
+  audience: {{ required (printf "jwtAuthenticators[%s].audience is required" .name) .audience | quote }}
+  {{- with .claims }}
+  claims:
+    {{- with .username }}
+    username: {{ . | quote }}
+    {{- end }}
+    {{- with .usernameExpression }}
+    usernameExpression: {{ . | quote }}
+    {{- end }}
+    {{- with .groups }}
+    groups: {{ . | quote }}
+    {{- end }}
+    {{- with .groupsExpression }}
+    groupsExpression: {{ . | quote }}
+    {{- end }}
+    {{- with .extra }}
+    extra:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- with .tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .claimValidationRules }}
+  claimValidationRules:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .userValidationRules }}
+  userValidationRules:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+---
+{{- end }}

@@ -1,0 +1,31 @@
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1alpha1.login.concierge.pinniped.dev
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+spec:
+  version: v1alpha1
+  group: login.concierge.pinniped.dev
+  groupPriorityMinimum: {{ .Values.apiService.groupPriorityMinimum }}
+  versionPriority: {{ .Values.apiService.versionPriority }}
+  service:
+    name: {{ include "pinniped-concierge.fullname" . }}-api
+    namespace: {{ .Release.Namespace }}
+    port: 443
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1alpha1.identity.concierge.pinniped.dev
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+spec:
+  version: v1alpha1
+  group: identity.concierge.pinniped.dev
+  groupPriorityMinimum: {{ .Values.apiService.groupPriorityMinimum }}
+  versionPriority: {{ .Values.apiService.versionPriority }}
+  service:
+    name: {{ include "pinniped-concierge.fullname" . }}-api
+    namespace: {{ .Release.Namespace }}
+    port: 443

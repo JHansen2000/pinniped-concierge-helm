@@ -1,0 +1,95 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "pinniped-concierge.fullname" . }}
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "pinniped-concierge.serviceAccountName.concierge" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: system:auth-delegator
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "pinniped-concierge.fullname" . }}-extension-apiserver-authentication-reader
+  namespace: kube-system
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "pinniped-concierge.serviceAccountName.concierge" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: extension-apiserver-authentication-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "pinniped-concierge.fullname" . }}-kube-system-pod-read
+  namespace: kube-system
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "pinniped-concierge.fullname" . }}-kube-system-pod-read
+  namespace: kube-system
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "pinniped-concierge.serviceAccountName.concierge" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "pinniped-concierge.fullname" . }}-kube-system-pod-read
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "pinniped-concierge.fullname" . }}-cluster-info-lister-watcher
+  namespace: kube-public
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - list
+      - watch
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ include "pinniped-concierge.fullname" . }}-cluster-info-lister-watcher
+  namespace: kube-public
+  labels:
+    {{- include "pinniped-concierge.labels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "pinniped-concierge.serviceAccountName.concierge" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "pinniped-concierge.fullname" . }}-cluster-info-lister-watcher
+  apiGroup: rbac.authorization.k8s.io

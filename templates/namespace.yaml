@@ -1,0 +1,17 @@
+{{/*
+This chart does not create or manage its own namespace - the namespace must exist
+before install (see README.md). This check is a safety net: the concierge's kube-cert-agent requires the
+namespace to run at the "privileged" Pod Security Admission level, and a missing label
+otherwise surfaces as a confusing Pod rejection instead of a clear error here.
+
+This is best-effort: `lookup` only has cluster access during a real `helm
+install`/`upgrade`, so the check is silently skipped for `helm template`,
+`--dry-run=client`, and if the namespace doesn't exist yet.
+*/}}
+{{- $ns := lookup "v1" "Namespace" "" .Release.Namespace }}
+{{- if $ns }}
+{{- $enforce := dig "metadata" "labels" "pod-security.kubernetes.io/enforce" "" $ns }}
+{{- if ne $enforce "privileged" }}
+{{- fail (printf "Namespace %q must be labeled pod-security.kubernetes.io/enforce=privileged (found %q). The concierge's kube-cert-agent requires a privileged namespace - label it and re-run, e.g.:\n  kubectl label namespace %s pod-security.kubernetes.io/enforce=privileged --overwrite" .Release.Namespace $enforce .Release.Namespace) }}
+{{- end }}
+{{- end }}
