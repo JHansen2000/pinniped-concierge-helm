@@ -7,11 +7,28 @@ Image:         {{ include "pinniped-concierge.image" . }}
 {{- if .Values.credentialIssuer.create }}
 Check rollout status with:
   kubectl get credentialissuer {{ include "pinniped-concierge.fullname" . }}-config -o yaml
+
 {{- end }}
 
-{{- if not .Values.certificate.enabled }}
+{{- if .Values.jwtAuthenticators }}
+Check each configured JWTAuthenticator with:
+{{- range .Values.jwtAuthenticators }}
+  kubectl get jwtauthenticator {{ .name }} -o yaml
+{{- end }}
 
-NOTE: certificate.enabled is false. Make sure the Secret(s) referenced by your
-jwtAuthenticators[].tls.certificateAuthorityDataSource entries exist before the
-JWTAuthenticator(s) can be used.
+{{- end }}
+
+{{- $needsCABundle := false }}
+{{- range .Values.jwtAuthenticators }}
+{{- if .tls }}
+{{- if .tls.certificateAuthorityDataSource }}
+{{- $needsCABundle = true }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if $needsCABundle }}
+
+NOTE: at least one jwtAuthenticators[] entry sets tls.certificateAuthorityDataSource. Make sure
+the Secret(s)/ConfigMap(s) it references exist in this namespace before that JWTAuthenticator can
+be used - Concierge will fail to trust the issuer's TLS cert otherwise.
 {{- end }}

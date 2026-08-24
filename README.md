@@ -1,29 +1,6 @@
-# Installing Pinniped w/ Helm
-Pinniped requires namespaces to be created manually prior to installing either the supervisor or concierge
+# Installing Pinniped Concierge w/ Helm
 
-## Namespaces
-The chart doesn't create its own namespace - create it (under whatever name you like, it
-doesn't have to be `pinniped-concierge`) before installing:
-```yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: pinniped-concierge
-  labels:
-    app: pinniped-concierge
-    pod-security.kubernetes.io/enforce: privileged
-```
-
-The `pod-security.kubernetes.io/enforce: privileged` label is required - the
-kube-cert-agent Pod the concierge creates needs privileged Pod Security Admission. If you
-install into a namespace that's missing this label, `helm install`/`helm upgrade` fails
-fast with a clear error instead of the namespace silently rejecting the concierge's Pods
-later. This check needs live cluster access (it uses Helm's `lookup`), so it's skipped
-under `helm template`/`--dry-run=client`.
-
-## Installation
-
-#### Installing the Concierge
+## Install
 ```bash
 helm install pinniped-concierge pinniped-concierge-chart --namespace pinniped-concierge --atomic --values <your-values.yaml>
 ```
