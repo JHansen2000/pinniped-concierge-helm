@@ -2,7 +2,7 @@
 
 ## Install
 ```bash
-helm install pinniped-concierge pinniped-concierge-chart --namespace pinniped-concierge --atomic --values <your-values.yaml>
+helm install pinniped-concierge pinniped-concierge-helm --namespace pinniped-concierge --atomic --values <your-values.yaml>
 ```
 
 `values.schema.json` validates the values you pass in; `helm lint`/`helm install`/`helm template`
