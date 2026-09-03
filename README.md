@@ -51,5 +51,3 @@ Every value above has a safe, unchanged-behavior default except `certificate.*` 
 `jwtAuthenticators[0].*`, which are unset and validated with Helm's `required` function - the
 chart will refuse to render until you supply them
 
-## RBAC
-Kubernetes RBAC policies are *not* controlled by these charts. Recommended to use RBAC Manager to configure these.
